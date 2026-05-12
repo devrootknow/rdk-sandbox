@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 const HASURA_URL = process.env.HASURA_URL || 'http://localhost:18086/v1/graphql';
-const HASURA_SECRET = process.env.HASURA_ADMIN_SECRET || 'BZPmB1rR9tKwF5cSAdcdzXt9WBuT6apcIyzToyEEsfE=';
+const HASURA_SECRET =
+  process.env.HASURA_ADMIN_SECRET || 'BZPmB1rR9tKwF5cSAdcdzXt9WBuT6apcIyzToyEEsfE=';
 
 interface GraphQLResponse<T> {
   data?: T;

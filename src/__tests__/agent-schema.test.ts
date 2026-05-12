@@ -21,18 +21,32 @@ describe('Agent Zod Schema (matches Hasura ag_fleet)', () => {
   it('rejects invalid port (< 9000)', () => {
     expect(() =>
       agentSchema.parse({
-        id: 'test:80', machine: 'test', port: 80, ag_role: 'x',
-        status: 'online', context_percent: null,
-        current_task: null, last_seen: null, domain: null, module: null,
-      })
+        id: 'test:80',
+        machine: 'test',
+        port: 80,
+        ag_role: 'x',
+        status: 'online',
+        context_percent: null,
+        current_task: null,
+        last_seen: null,
+        domain: null,
+        module: null,
+      }),
     ).toThrow();
   });
 
   it('accepts null context_percent and current_task', () => {
     const agent = agentSchema.parse({
-      id: 'imac:9043', machine: 'imac', port: 9043, ag_role: 'legal',
-      status: 'offline', context_percent: null,
-      current_task: null, last_seen: null, domain: null, module: null,
+      id: 'imac:9043',
+      machine: 'imac',
+      port: 9043,
+      ag_role: 'legal',
+      status: 'offline',
+      context_percent: null,
+      current_task: null,
+      last_seen: null,
+      domain: null,
+      module: null,
     });
     expect(agent.context_percent).toBeNull();
     expect(agent.current_task).toBeNull();
@@ -48,9 +62,16 @@ describe('Agent Zod Schema (matches Hasura ag_fleet)', () => {
     const statuses = ['idle', 'busy', 'online', 'offline', 'error'];
     for (const status of statuses) {
       const agent = agentSchema.parse({
-        id: `test:9011`, machine: 'test', port: 9011, ag_role: 'test',
-        status, context_percent: 0,
-        current_task: null, last_seen: null, domain: null, module: null,
+        id: `test:9011`,
+        machine: 'test',
+        port: 9011,
+        ag_role: 'test',
+        status,
+        context_percent: 0,
+        current_task: null,
+        last_seen: null,
+        domain: null,
+        module: null,
       });
       expect(agent.status).toBe(status);
     }

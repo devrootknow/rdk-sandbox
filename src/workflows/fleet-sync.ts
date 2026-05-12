@@ -1,112 +1,21 @@
 /**
- * DBOS-Pattern Durable Workflow: Fleet Sync
+ * DBOS Durable Workflow: Fleet Sync
  *
- * Implements the DBOS durable execution pattern:
- * - @workflow: orchestrates steps, persists state to PostgreSQL
- * - @step: atomic unit of work, output checkpointed
- * - Crash recovery: resume from last completed step
+ * Uses @dbos-inc/dbos-sdk v4 decorators for real durable execution:
+ * - @DBOS.workflow(): orchestrates steps with crash recovery
+ * - @DBOS.step(): atomic unit of work with retry + checkpoint
  *
- * Architecture matches @dbos-inc/dbos-sdk but runs natively in Next.js.
- * When DBOS adds Next.js support, swap to decorators with zero logic changes.
+ * DBOS SDK is excluded from Next.js bundler via serverExternalPackages
+ * in next.config.ts, so it runs as native Node.js at runtime.
+ *
+ * @see https://docs.dbos.dev/typescript/tutorials/workflow-tutorial
  */
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import { hasuraQuery } from '@/db/hasura';
 import { agentSchema, type Agent } from '@/schemas/agent';
 
-// ─── Workflow State (persisted to PostgreSQL in production) ───
-interface WorkflowCheckpoint {
-  workflowId: string;
-  step: number;
-  totalSteps: number;
-  status: 'running' | 'completed' | 'failed';
-  stepOutputs: Record<number, unknown>;
-  error: string | null;
-  startedAt: string;
-  completedAt: string | null;
-}
-
-function createCheckpoint(id: string): WorkflowCheckpoint {
-  return {
-    workflowId: id,
-    step: 0,
-    totalSteps: 3,
-    status: 'running',
-    stepOutputs: {},
-    error: null,
-    startedAt: new Date().toISOString(),
-    completedAt: null,
-  };
-}
-
-// ─── Step 1: Fetch (retriesAllowed: true, maxAttempts: 3) ───
-async function fetchAgents(): Promise<Agent[]> {
-  const QUERY = `
-    query { ag_fleet(order_by: { port: asc }) {
-      id machine port ag_role status
-      context_percent current_task last_seen
-      domain module
-    }}
-  `;
-
-  const maxRetries = 3;
-  let lastError: Error | null = null;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const data = await hasuraQuery<{ ag_fleet: Agent[] }>(QUERY);
-      return data.ag_fleet;
-    } catch (err) {
-      lastError = err instanceof Error ? err : new Error(String(err));
-      if (attempt < maxRetries) {
-        await new Promise((r) => setTimeout(r, 1000 * attempt));
-      }
-    }
-  }
-
-  throw lastError ?? new Error('fetchAgents failed after retries');
-}
-
-// ─── Step 2: Validate (deterministic, idempotent) ───
-function validateAgents(raw: Agent[]): { valid: Agent[]; errors: string[] } {
-  const valid: Agent[] = [];
-  const errors: string[] = [];
-
-  for (const agent of raw) {
-    const result = agentSchema.safeParse(agent);
-    if (result.success) {
-      valid.push(result.data);
-    } else {
-      errors.push(`${agent.id}: ${result.error.issues[0]?.message}`);
-    }
-  }
-
-  return { valid, errors };
-}
-
-// ─── Step 3: Compute Health (pure function) ───
-function computeHealth(agents: Agent[]): Record<string, unknown> {
-  const byStatus: Record<string, number> = {};
-  const byMachine: Record<string, number> = {};
-
-  for (const a of agents) {
-    byStatus[a.status] = (byStatus[a.status] || 0) + 1;
-    byMachine[a.machine] = (byMachine[a.machine] || 0) + 1;
-  }
-
-  const avgContext =
-    agents.reduce((sum, a) => sum + (a.context_percent ?? 0), 0) /
-    (agents.length || 1);
-
-  return {
-    totalAgents: agents.length,
-    byStatus,
-    byMachine,
-    avgContextPercent: Math.round(avgContext * 10) / 10,
-    timestamp: new Date().toISOString(),
-  };
-}
-
-// ─── Workflow Orchestrator ───
-export async function fleetSyncWorkflow(): Promise<{
+// ─── Result Types ───
+interface WorkflowResult {
   state: {
     id: string;
     status: 'completed' | 'failed';
@@ -117,56 +26,157 @@ export async function fleetSyncWorkflow(): Promise<{
     completedAt: string;
   };
   health: Record<string, unknown>;
-}> {
-  const checkpoint = createCheckpoint(`fleet-sync-${Date.now()}`);
+}
 
-  try {
-    // Step 1: Fetch (with retry)
-    checkpoint.step = 1;
-    const rawAgents = await fetchAgents();
-    checkpoint.stepOutputs[1] = { count: rawAgents.length };
+// ─── DBOS Initialization ───
+let dbosInitialized = false;
 
-    // Step 2: Validate
-    checkpoint.step = 2;
-    const { valid, errors } = validateAgents(rawAgents);
-    checkpoint.stepOutputs[2] = { valid: valid.length, errors: errors.length };
+async function ensureDBOS(): Promise<void> {
+  if (dbosInitialized || DBOS.isInitialized()) {
+    dbosInitialized = true;
+    return;
+  }
 
-    // Step 3: Compute
-    checkpoint.step = 3;
-    const health = computeHealth(valid);
-    checkpoint.stepOutputs[3] = health;
+  const dbUrl =
+    process.env.DATABASE_URL ||
+    'postgresql://supabase_admin:rootknow-supa-2026@172.22.0.11:5432/postgres';
 
-    checkpoint.status = 'completed';
-    checkpoint.completedAt = new Date().toISOString();
+  DBOS.setConfig({
+    name: 'rdk-sandbox',
+    systemDatabaseUrl: dbUrl,
+    enableOTLP: false,
+    tracingEnabled: false,
+    runAdminServer: false,
+    logLevel: 'warn',
+  });
+
+  await DBOS.launch();
+  dbosInitialized = true;
+}
+
+// ─── Fleet Sync Workflow Class ───
+class FleetSync {
+  /**
+   * Step 1: Fetch agents from Hasura (retriable, maxAttempts: 3)
+   * @DBOS.step() ensures at-least-once execution with checkpoint
+   */
+  @DBOS.step({ retriesAllowed: true, maxAttempts: 3, backoffRate: 2, intervalSeconds: 1 })
+  static async fetchAgents(): Promise<Agent[]> {
+    const QUERY = `
+      query { ag_fleet(order_by: { port: asc }) {
+        id machine port ag_role status
+        context_percent current_task last_seen
+        domain module
+      }}
+    `;
+    const data = await hasuraQuery<{ ag_fleet: Agent[] }>(QUERY);
+    return data.ag_fleet;
+  }
+
+  /**
+   * Step 2: Validate agents via Zod schema (deterministic, idempotent)
+   * @DBOS.step() checkpoints the validation output
+   */
+  @DBOS.step()
+  static async validateAgents(raw: Agent[]): Promise<{ valid: Agent[]; errors: string[] }> {
+    const valid: Agent[] = [];
+    const errors: string[] = [];
+
+    for (const agent of raw) {
+      const result = agentSchema.safeParse(agent);
+      if (result.success) {
+        valid.push(result.data);
+      } else {
+        errors.push(`${agent.id}: ${result.error.issues[0]?.message}`);
+      }
+    }
+
+    return { valid, errors };
+  }
+
+  /**
+   * Step 3: Compute fleet health metrics (pure function)
+   * @DBOS.step() checkpoints the computed health snapshot
+   */
+  @DBOS.step()
+  static async computeHealth(agents: Agent[]): Promise<Record<string, unknown>> {
+    const byStatus: Record<string, number> = {};
+    const byMachine: Record<string, number> = {};
+
+    for (const a of agents) {
+      byStatus[a.status] = (byStatus[a.status] || 0) + 1;
+      byMachine[a.machine] = (byMachine[a.machine] || 0) + 1;
+    }
+
+    const avgContext =
+      agents.reduce((sum, a) => sum + (a.context_percent ?? 0), 0) / (agents.length || 1);
 
     return {
-      state: {
-        id: checkpoint.workflowId,
-        status: 'completed',
-        step: checkpoint.step,
-        totalSteps: checkpoint.totalSteps,
-        error: null,
-        startedAt: checkpoint.startedAt,
-        completedAt: checkpoint.completedAt,
-      },
-      health,
-    };
-  } catch (err) {
-    checkpoint.status = 'failed';
-    checkpoint.completedAt = new Date().toISOString();
-    checkpoint.error = err instanceof Error ? err.message : String(err);
-
-    return {
-      state: {
-        id: checkpoint.workflowId,
-        status: 'failed',
-        step: checkpoint.step,
-        totalSteps: checkpoint.totalSteps,
-        error: checkpoint.error,
-        startedAt: checkpoint.startedAt,
-        completedAt: checkpoint.completedAt,
-      },
-      health: { error: checkpoint.error, failedAtStep: checkpoint.step },
+      totalAgents: agents.length,
+      byStatus,
+      byMachine,
+      avgContextPercent: Math.round(avgContext * 10) / 10,
+      timestamp: new Date().toISOString(),
     };
   }
+
+  /**
+   * Workflow Orchestrator: coordinates 3 steps with DBOS durable execution
+   * @DBOS.workflow() persists state across steps for crash recovery
+   */
+  @DBOS.workflow()
+  static async run(): Promise<WorkflowResult> {
+    const workflowId = `fleet-sync-${Date.now()}`;
+    const startedAt = new Date().toISOString();
+
+    try {
+      // Step 1: Fetch (with DBOS retry policy)
+      const rawAgents = await FleetSync.fetchAgents();
+
+      // Step 2: Validate (deterministic, checkpointed)
+      const { valid } = await FleetSync.validateAgents(rawAgents);
+
+      // Step 3: Compute health (pure, checkpointed)
+      const health = await FleetSync.computeHealth(valid);
+
+      return {
+        state: {
+          id: workflowId,
+          status: 'completed',
+          step: 3,
+          totalSteps: 3,
+          error: null,
+          startedAt,
+          completedAt: new Date().toISOString(),
+        },
+        health,
+      };
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err);
+      return {
+        state: {
+          id: workflowId,
+          status: 'failed',
+          step: 1,
+          totalSteps: 3,
+          error,
+          startedAt,
+          completedAt: new Date().toISOString(),
+        },
+        health: { error, failedAtStep: 1 },
+      };
+    }
+  }
 }
+
+/**
+ * Public entry point — preserves backward-compatible function signature.
+ * Ensures DBOS is launched before invoking the workflow.
+ * Called by tRPC router and tests.
+ */
+export async function fleetSyncWorkflow(): Promise<WorkflowResult> {
+  await ensureDBOS();
+  return FleetSync.run();
+}
+
+export { FleetSync };

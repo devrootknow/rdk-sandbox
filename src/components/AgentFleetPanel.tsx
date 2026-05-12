@@ -17,21 +17,13 @@ export function AgentFleetPanel() {
       <div className="rdk-panel-header">
         <div>
           <div className="rdk-panel-title">🤖 Fleet Overview</div>
-          <div className="rdk-panel-subtitle">
-            LIVE from Hasura ag_fleet — real production data
-          </div>
+          <div className="rdk-panel-subtitle">LIVE from Hasura ag_fleet — real production data</div>
         </div>
-        <div className="rdk-panel-subtitle">
-          {agents ? `${agents.length} agents` : '...'}
-        </div>
+        <div className="rdk-panel-subtitle">{agents ? `${agents.length} agents` : '...'}</div>
       </div>
 
       {isLoading && <div className="rdk-panel-subtitle">Loading agents...</div>}
-      {error && (
-        <div className="rdk-badge rdk-badge--error">
-          Error: {error.message}
-        </div>
-      )}
+      {error && <div className="rdk-badge rdk-badge--error">Error: {error.message}</div>}
 
       {agents && agents.length > 0 && (
         <table className="rdk-table">
@@ -54,16 +46,12 @@ export function AgentFleetPanel() {
                 <td className="rdk-table-cell--machine">{agent.machine}</td>
                 <td className="rdk-table-cell--mono">{agent.port}</td>
                 <td>{agent.ag_role}</td>
-                <td><StatusBadge status={agent.status} /></td>
                 <td>
-                  {agent.context_percent !== null
-                    ? `${agent.context_percent}%`
-                    : '—'}
+                  <StatusBadge status={agent.status} />
                 </td>
+                <td>{agent.context_percent !== null ? `${agent.context_percent}%` : '—'}</td>
                 <td>{agent.domain || '—'}</td>
-                <td className="rdk-table-cell--truncate">
-                  {agent.current_task || '—'}
-                </td>
+                <td className="rdk-table-cell--truncate">{agent.current_task || '—'}</td>
               </tr>
             ))}
           </tbody>
@@ -71,9 +59,7 @@ export function AgentFleetPanel() {
       )}
 
       {agents && agents.length === 0 && (
-        <div className="rdk-panel-subtitle rdk-panel-empty">
-          No agents found in ag_fleet.
-        </div>
+        <div className="rdk-panel-subtitle rdk-panel-empty">No agents found in ag_fleet.</div>
       )}
     </div>
   );

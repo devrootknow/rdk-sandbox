@@ -48,10 +48,9 @@ export const agentRouter = router({
     .input(agentSchema.shape.id)
     .output(agentSchema.nullable())
     .query(async ({ input }) => {
-      const data = await hasuraQuery<{ ag_fleet_by_pk: Agent | null }>(
-        AGENT_BY_ID_QUERY,
-        { id: input },
-      );
+      const data = await hasuraQuery<{ ag_fleet_by_pk: Agent | null }>(AGENT_BY_ID_QUERY, {
+        id: input,
+      });
       return data.ag_fleet_by_pk;
     }),
 });

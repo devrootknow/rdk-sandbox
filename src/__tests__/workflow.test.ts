@@ -1,32 +1,65 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
+
+// Mock DBOS SDK — decorators become pass-through, no DB needed
+vi.mock('@dbos-inc/dbos-sdk', () => {
+  const passThrough = () => (_target: object, _key: string, descriptor: PropertyDescriptor) => descriptor;
+  return {
+    DBOS: {
+      workflow: passThrough,
+      step: (_config?: Record<string, unknown>) => (_target: object, _key: string, descriptor: PropertyDescriptor) => descriptor,
+      launch: vi.fn().mockResolvedValue(undefined),
+      shutdown: vi.fn().mockResolvedValue(undefined),
+      setConfig: vi.fn(),
+      isInitialized: vi.fn().mockReturnValue(false),
+    },
+  };
+});
 
 // Mock Hasura
 vi.mock('@/db/hasura', () => ({
   hasuraQuery: vi.fn().mockResolvedValue({
     ag_fleet: [
       {
-        id: 'devpc:9011', machine: 'devpc', port: 9011,
-        ag_role: 'lead', status: 'idle', context_percent: 14,
-        current_task: null, last_seen: '2026-05-13T01:46:42Z',
-        domain: 'commander', module: 'dev-lead',
+        id: 'devpc:9011',
+        machine: 'devpc',
+        port: 9011,
+        ag_role: 'lead',
+        status: 'idle',
+        context_percent: 14,
+        current_task: null,
+        last_seen: '2026-05-13T01:46:42Z',
+        domain: 'commander',
+        module: 'dev-lead',
       },
       {
-        id: 'devpc:9012', machine: 'devpc', port: 9012,
-        ag_role: 'frontend', status: 'busy', context_percent: 45,
-        current_task: 'Panel build', last_seen: '2026-05-13T01:46:42Z',
-        domain: 'commander', module: 'frontend-builder',
+        id: 'devpc:9012',
+        machine: 'devpc',
+        port: 9012,
+        ag_role: 'frontend',
+        status: 'busy',
+        context_percent: 45,
+        current_task: 'Panel build',
+        last_seen: '2026-05-13T01:46:42Z',
+        domain: 'commander',
+        module: 'frontend-builder',
       },
       {
-        id: 'ns2:9034', machine: 'ns2', port: 9034,
-        ag_role: 'architect', status: 'idle', context_percent: 20,
-        current_task: null, last_seen: '2026-05-13T01:46:42Z',
-        domain: 'commander', module: 'system-owner',
+        id: 'ns2:9034',
+        machine: 'ns2',
+        port: 9034,
+        ag_role: 'architect',
+        status: 'idle',
+        context_percent: 20,
+        current_task: null,
+        last_seen: '2026-05-13T01:46:42Z',
+        domain: 'commander',
+        module: 'system-owner',
       },
     ],
   }),
 }));
 
-describe('Fleet Sync Workflow (DBOS Pattern)', () => {
+describe('Fleet Sync Workflow (DBOS Decorators)', () => {
   it('completes workflow with valid agents', async () => {
     const { fleetSyncWorkflow } = await import('@/workflows/fleet-sync');
     const { state, health } = await fleetSyncWorkflow();
@@ -48,8 +81,9 @@ describe('Fleet Sync Workflow (DBOS Pattern)', () => {
     expect(state.id).toMatch(/^fleet-sync-\d+$/);
     expect(state.startedAt).toBeTruthy();
     expect(state.completedAt).toBeTruthy();
-    expect(new Date(state.completedAt).getTime())
-      .toBeGreaterThanOrEqual(new Date(state.startedAt).getTime());
+    expect(new Date(state.completedAt).getTime()).toBeGreaterThanOrEqual(
+      new Date(state.startedAt).getTime(),
+    );
   });
 
   it('computes correct fleet health metrics', async () => {
@@ -66,14 +100,28 @@ describe('Fleet Sync Workflow (DBOS Pattern)', () => {
   });
 
   it('handles Hasura failure gracefully', async () => {
-    const hasura = await import('@/db/hasura');
-    vi.mocked(hasura.hasuraQuery).mockRejectedValue(new Error('Connection refused'));
-
-    // Re-import to get fresh module
+    // Re-import with failed Hasura
     vi.resetModules();
+
+    // Re-mock DBOS
+    vi.doMock('@dbos-inc/dbos-sdk', () => {
+      const passThrough = () => (_target: object, _key: string, descriptor: PropertyDescriptor) => descriptor;
+      return {
+        DBOS: {
+          workflow: passThrough,
+          step: (_config?: Record<string, unknown>) => (_target: object, _key: string, descriptor: PropertyDescriptor) => descriptor,
+          launch: vi.fn().mockResolvedValue(undefined),
+          shutdown: vi.fn().mockResolvedValue(undefined),
+          setConfig: vi.fn(),
+          isInitialized: vi.fn().mockReturnValue(false),
+        },
+      };
+    });
+
     vi.doMock('@/db/hasura', () => ({
       hasuraQuery: vi.fn().mockRejectedValue(new Error('Connection refused')),
     }));
+
     const { fleetSyncWorkflow } = await import('@/workflows/fleet-sync');
     const { state } = await fleetSyncWorkflow();
 

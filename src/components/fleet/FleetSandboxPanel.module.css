@@ -40,7 +40,7 @@
 .roleCell { font-weight: var(--cmd-fw-medium); }
 .taskCell { font-size: var(--cmd-fs-xs); color: var(--cmd-text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .contextBar { width: 60px; height: 4px; background: var(--cmd-bg-deep); border-radius: 2px; overflow: hidden; display: inline-block; vertical-align: middle; }
-.contextFill { height: 100%; background: var(--cmd-primary); border-radius: 2px; transition: width var(--cmd-duration) var(--cmd-ease-out); }
+.contextFill { height: 100%; width: var(--progress-width, 0%); background: var(--cmd-primary); border-radius: 2px; transition: width var(--cmd-duration) var(--cmd-ease-out); }
 .contextLabel { font-size: var(--cmd-fs-2xs); color: var(--cmd-text-muted); margin-left: var(--cmd-sp-1); font-variant-numeric: tabular-nums; }
 .loadingContainer { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--cmd-sp-3); padding: var(--cmd-sp-8); color: var(--cmd-text-muted); }
 .errorContainer { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--cmd-sp-3); padding: var(--cmd-sp-8); color: var(--cmd-danger); }

@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     "http://localhost:3502",
     "http://127.0.0.1:3502",
   ],
+  serverExternalPackages: ['@dbos-inc/dbos-sdk'],
 };
 
 export default nextConfig;
