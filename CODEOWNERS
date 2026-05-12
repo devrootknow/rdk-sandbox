@@ -1,0 +1,23 @@
+# RDK Sandbox — Code Ownership
+# Enforces review requirements per domain
+
+# Shared infrastructure (Architect only)
+/src/trpc/router.ts              @ns2-architect
+/src/trpc/init.ts                @ns2-architect
+/src/db/                         @ns2-architect
+/src/components/shared/          @ns2-architect
+
+# Per-domain
+/src/trpc/routers/agent.ts       @devpc-backend
+/src/schemas/agent.ts            @devpc-backend
+/src/components/fleet/           @devpc-frontend
+/src/app/fleet/                  @devpc-frontend
+
+# Config (DevOps)
+/tsconfig.json                   @devpc-devops
+/eslint.config.mjs               @devpc-devops
+/vitest.config.mts               @devpc-devops
+/.github/                        @devpc-devops
+
+# Tests
+/src/__tests__/                  @devpc-qa

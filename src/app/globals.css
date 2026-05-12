@@ -1,32 +1,29 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ═══════════════════════════════════════════════════════════════════
+   RDK SANDBOX — GLOBAL STYLES
+   Dark-first, Commander V3 design system
+   ═══════════════════════════════════════════════════════════════════ */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Blueprint.js 6 — dark theme */
+@import "@blueprintjs/core/lib/css/blueprint.css";
+@import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 
 html {
   height: 100%;
+  color-scheme: dark;
 }
 
-html,
-body {
+html, body {
   max-width: 100vw;
   overflow-x: hidden;
 }
 
 body {
-  min-height: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--cmd-text);
+  background: var(--cmd-bg-deep);
+  font-family: var(--cmd-font);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -38,12 +35,88 @@ body {
 }
 
 a {
-  color: inherit;
+  color: var(--cmd-primary);
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+a:hover {
+  color: var(--cmd-primary-hover);
 }
+
+/* Blueprint dark overrides */
+.bp5-dark, :root {
+  --pt-intent-primary: var(--cmd-primary);
+  --pt-intent-success: var(--cmd-success);
+  --pt-intent-warning: var(--cmd-warning);
+  --pt-intent-danger: var(--cmd-danger);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cmd-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cmd-text-muted);
+}
+
+/* === Fix #1: Replace inline styles with CSS classes === */
+.rdk-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--rdk-spacing-xl);
+}
+
+.rdk-page-header {
+  margin-bottom: var(--rdk-spacing-xl);
+}
+
+.rdk-page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--rdk-text-primary);
+}
+
+.rdk-page-description {
+  color: var(--rdk-text-muted);
+  font-size: 14px;
+}
+
+.rdk-table-cell--machine {
+  font-weight: 600;
+  color: var(--rdk-text-primary);
+}
+
+.rdk-table-cell--mono {
+  font-family: var(--rdk-font-mono);
+}
+
+.rdk-table-cell--truncate {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rdk-panel-empty {
+  padding: var(--rdk-spacing-lg);
+  text-align: center;
+}
+
+.rdk-progress-bar {
+  height: 4px;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.rdk-badge--idle { background: rgba(45,114,210,0.2); color: #8abbff; }

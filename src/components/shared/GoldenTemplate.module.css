@@ -1,0 +1,100 @@
+/* ═══════════════════════════════════════════════════════════════════
+   GOLDEN TEMPLATE — Canonical panel wrapper CSS
+   Imported from Commander V3 Spec §3.3
+   ═══════════════════════════════════════════════════════════════════ */
+
+.root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--cmd-bg-muted);
+  overflow: hidden;
+  font-family: var(--cmd-font);
+  animation: panelFadeIn 0.25s var(--cmd-ease-out) both;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  flex-direction: column;
+  gap: var(--cmd-sp-2);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--cmd-sp-2) var(--cmd-sp-3);
+  border-bottom: 1px solid var(--cmd-border);
+  background: var(--cmd-bg-muted);
+  min-height: 40px;
+  flex-shrink: 0;
+  gap: var(--cmd-sp-2);
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--cmd-sp-2);
+  min-width: 0;
+}
+
+.headerTitle h3 {
+  font-size: var(--panel-fs, var(--cmd-fs-md));
+  font-weight: var(--cmd-fw-semi);
+  color: var(--cmd-text);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--cmd-sp-1);
+  flex-shrink: 0;
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--cmd-sp-4);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.statusDotLive {
+  composes: statusDot;
+  background: var(--cmd-success);
+}
+
+.statusDotStale {
+  composes: statusDot;
+  background: var(--cmd-text-muted);
+  animation: none;
+}
+
+.lastUpdate {
+  font-size: var(--cmd-fs-2xs);
+  color: var(--cmd-text-disabled);
+  white-space: nowrap;
+}
+
+@keyframes panelFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}

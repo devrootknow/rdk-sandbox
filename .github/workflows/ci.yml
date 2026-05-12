@@ -1,0 +1,50 @@
+name: RDK Sandbox CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    name: Lint + TypeCheck + Test + Migration Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      
+      - name: Install
+        run: npm ci
+      
+      - name: TypeScript Strict Check
+        run: npx tsc --noEmit
+      
+      - name: ESLint
+        run: npx next lint
+      
+      - name: Prettier Check
+        run: npx prettier --check "src/**/*.{ts,tsx}"
+      
+      - name: Vitest
+        run: npx vitest run
+      
+      - name: Squawk Migration Lint
+        run: |
+          pip install squawk-cli
+          if ls drizzle/*.sql 1>/dev/null 2>&1; then
+            squawk drizzle/*.sql || echo "⚠️ squawk found issues (non-blocking for now)"
+          else
+            echo "No migration files to lint"
+          fi
+      
+      - name: Build
+        run: npx next build
+        env:
+          HASURA_URL: http://localhost:18086/v1/graphql
+          HASURA_ADMIN_SECRET: ${{ secrets.HASURA_ADMIN_SECRET }}

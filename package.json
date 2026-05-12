@@ -3,19 +3,48 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3500",
     "build": "next build",
-    "start": "next start"
+    "start": "next start -p 3500",
+    "lint": "next lint",
+    "typecheck": "npx tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
+    "db:seed": "npx tsx src/db/seed.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@blueprintjs/core": "^6.12.1",
+    "@blueprintjs/icons": "^6.9.1",
+    "@dbos-inc/dbos-sdk": "^4.17.6",
+    "@sentry/nextjs": "^10.53.1",
+    "@tanstack/react-query": "^5.100.10",
+    "@trpc/client": "^11.13.0",
+    "@trpc/react-query": "^11.13.0",
+    "@trpc/server": "^11.13.0",
+    "drizzle-orm": "^0.45.2",
     "next": "16.2.6",
+    "pg": "^8.20.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5"
+    "drizzle-kit": "^0.31.10",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.6",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.8.3",
+    "typescript": "^5",
+    "vitest": "^4.1.6"
   }
 }

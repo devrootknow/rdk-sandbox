@@ -1,0 +1,48 @@
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--cmd-sp-3);
+  margin-bottom: var(--cmd-sp-4);
+}
+.statCard {
+  background: var(--cmd-bg-elevated);
+  border: 1px solid var(--cmd-border-light);
+  border-radius: var(--cmd-radius-lg);
+  padding: var(--cmd-sp-3) var(--cmd-sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cmd-sp-1);
+  transition: border-color var(--cmd-duration-fast) var(--cmd-ease-out), background var(--cmd-duration-fast) var(--cmd-ease-out);
+}
+.statCard:hover { border-color: var(--cmd-border); background: var(--cmd-bg-hover); }
+.statLabel { font-size: var(--cmd-fs-2xs); font-weight: var(--cmd-fw-medium); color: var(--cmd-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.statValue { font-size: var(--cmd-fs-2xl); font-weight: var(--cmd-fw-bold); color: var(--cmd-text); font-variant-numeric: tabular-nums; }
+.statValueOnline { color: var(--cmd-success); }
+.statValueBusy { color: var(--cmd-warning); }
+.statValueError { color: var(--cmd-danger); }
+.machineGroup { margin-bottom: var(--cmd-sp-4); }
+.machineHeader { display: flex; align-items: center; gap: var(--cmd-sp-2); margin-bottom: var(--cmd-sp-2); padding-bottom: var(--cmd-sp-1); border-bottom: 1px solid var(--cmd-border-light); }
+.machineLabel { font-size: var(--cmd-fs-sm); font-weight: var(--cmd-fw-semi); color: var(--cmd-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+.machineCount { font-size: var(--cmd-fs-xs); color: var(--cmd-text-muted); background: var(--cmd-bg-elevated); padding: 1px 6px; border-radius: var(--cmd-radius-sm); }
+.agentTable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--cmd-fs-sm); }
+.agentTable th { text-align: left; padding: var(--cmd-sp-2) var(--cmd-sp-3); font-weight: var(--cmd-fw-semi); font-size: var(--cmd-fs-xs); color: var(--cmd-text-muted); text-transform: uppercase; letter-spacing: 0.04em; background: var(--cmd-bg-deep); border-bottom: 1px solid var(--cmd-border); position: sticky; top: 0; z-index: 1; }
+.agentTable td { padding: var(--cmd-sp-2) var(--cmd-sp-3); color: var(--cmd-text); border-bottom: 1px solid var(--cmd-border-light); vertical-align: middle; }
+.agentTable tr { transition: background var(--cmd-duration-fast) var(--cmd-ease-out); }
+.agentTable tbody tr:hover { background: var(--cmd-bg-hover); }
+.statusBadge { display: inline-flex; align-items: center; gap: var(--cmd-sp-1); padding: 2px var(--cmd-sp-2); border-radius: var(--cmd-radius-sm); font-size: var(--cmd-fs-xs); font-weight: var(--cmd-fw-medium); line-height: 1.4; }
+.statusOnline { composes: statusBadge; background: var(--cmd-success-muted); color: var(--cmd-success); border: 1px solid var(--cmd-success-border); }
+.statusBusy { composes: statusBadge; background: var(--cmd-warning-muted); color: var(--cmd-warning); border: 1px solid var(--cmd-warning-border); }
+.statusError { composes: statusBadge; background: var(--cmd-danger-muted); color: var(--cmd-danger); border: 1px solid var(--cmd-danger-border); }
+.statusOffline { composes: statusBadge; background: var(--cmd-bg-elevated); color: var(--cmd-text-disabled); border: 1px solid var(--cmd-border-light); }
+.statusIdle { composes: statusBadge; background: var(--cmd-info-muted); color: var(--cmd-info); border: 1px solid var(--cmd-border-light); }
+.statusDotInline { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.portCell { font-family: var(--cmd-font-mono); font-size: var(--cmd-fs-xs); color: var(--cmd-text-secondary); }
+.roleCell { font-weight: var(--cmd-fw-medium); }
+.taskCell { font-size: var(--cmd-fs-xs); color: var(--cmd-text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.contextBar { width: 60px; height: 4px; background: var(--cmd-bg-deep); border-radius: 2px; overflow: hidden; display: inline-block; vertical-align: middle; }
+.contextFill { height: 100%; background: var(--cmd-primary); border-radius: 2px; transition: width var(--cmd-duration) var(--cmd-ease-out); }
+.contextLabel { font-size: var(--cmd-fs-2xs); color: var(--cmd-text-muted); margin-left: var(--cmd-sp-1); font-variant-numeric: tabular-nums; }
+.loadingContainer { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--cmd-sp-3); padding: var(--cmd-sp-8); color: var(--cmd-text-muted); }
+.errorContainer { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--cmd-sp-3); padding: var(--cmd-sp-8); color: var(--cmd-danger); }
+.errorMessage { font-size: var(--cmd-fs-sm); color: var(--cmd-text-secondary); max-width: 400px; text-align: center; }
+.emptyState { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--cmd-sp-3); padding: var(--cmd-sp-8); color: var(--cmd-text-muted); font-size: var(--cmd-fs-sm); }
