@@ -26,7 +26,7 @@ jobs:
         run: npx tsc --noEmit
       
       - name: ESLint
-        run: npm run lint
+        run: npx eslint src/
       
       - name: Prettier Check
         run: npx prettier --check "src/**/*.{ts,tsx}"
