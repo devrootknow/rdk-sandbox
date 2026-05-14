@@ -58,7 +58,10 @@ function ContextBar({ percent }: { percent: number }) {
   const fillRef = React.useRef<HTMLSpanElement>(null);
   React.useEffect(() => {
     if (fillRef.current) {
-      fillRef.current.style.setProperty('--progress-width', `${Math.min(100, Math.max(0, percent))}%`);
+      fillRef.current.style.setProperty(
+        '--progress-width',
+        `${Math.min(100, Math.max(0, percent))}%`,
+      );
     }
   }, [percent]);
   return (

@@ -11,7 +11,9 @@ export async function GET() {
   if (isActive) {
     try {
       Sentry.captureMessage('Sentry self-hosted test ping', 'info');
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   return NextResponse.json({
@@ -19,7 +21,9 @@ export async function GET() {
     sentryActive: isActive,
     sdkVersion: Sentry.SDK_VERSION ?? 'unknown',
     dsn: dsn ? dsn.replace(/\/\/([^@]+)@/, '//<key>@') : 'NOT CONFIGURED',
-    dsnFromClient: clientDsn ? `${clientDsn.protocol}://${clientDsn.publicKey}@${clientDsn.host}:${clientDsn.port}/${clientDsn.projectId}` : 'client not initialized in this context',
+    dsnFromClient: clientDsn
+      ? `${clientDsn.protocol}://${clientDsn.publicKey}@${clientDsn.host}:${clientDsn.port}/${clientDsn.projectId}`
+      : 'client not initialized in this context',
     environment: process.env.NODE_ENV,
     configFiles: ['sentry.client.config.ts', 'sentry.server.config.ts', 'sentry.edge.config.ts'],
     timestamp: new Date().toISOString(),

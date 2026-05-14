@@ -2,11 +2,15 @@ import { describe, it, expect, vi, beforeAll } from 'vitest';
 
 // Mock DBOS SDK — decorators become pass-through, no DB needed
 vi.mock('@dbos-inc/dbos-sdk', () => {
-  const passThrough = () => (_target: object, _key: string, descriptor: PropertyDescriptor) => descriptor;
+  const passThrough = () => (_target: object, _key: string, descriptor: PropertyDescriptor) =>
+    descriptor;
   return {
     DBOS: {
       workflow: passThrough,
-      step: (_config?: Record<string, unknown>) => (_target: object, _key: string, descriptor: PropertyDescriptor) => descriptor,
+      step:
+        (_config?: Record<string, unknown>) =>
+        (_target: object, _key: string, descriptor: PropertyDescriptor) =>
+          descriptor,
       launch: vi.fn().mockResolvedValue(undefined),
       shutdown: vi.fn().mockResolvedValue(undefined),
       setConfig: vi.fn(),
@@ -105,11 +109,15 @@ describe('Fleet Sync Workflow (DBOS Decorators)', () => {
 
     // Re-mock DBOS
     vi.doMock('@dbos-inc/dbos-sdk', () => {
-      const passThrough = () => (_target: object, _key: string, descriptor: PropertyDescriptor) => descriptor;
+      const passThrough = () => (_target: object, _key: string, descriptor: PropertyDescriptor) =>
+        descriptor;
       return {
         DBOS: {
           workflow: passThrough,
-          step: (_config?: Record<string, unknown>) => (_target: object, _key: string, descriptor: PropertyDescriptor) => descriptor,
+          step:
+            (_config?: Record<string, unknown>) =>
+            (_target: object, _key: string, descriptor: PropertyDescriptor) =>
+              descriptor,
           launch: vi.fn().mockResolvedValue(undefined),
           shutdown: vi.fn().mockResolvedValue(undefined),
           setConfig: vi.fn(),
